@@ -5,28 +5,34 @@ from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from sklearn.model_selection import GridSearchCV
-import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
-def svr_predict():
-    df = yfinance.download("GOOGL")
-    #print(df.columns)
 
-    df = df[['Adj Close']]
+def data_pre(stock_name, forecast_out):
+    df = yfinance.download(stock_name)
+    #print(df)
+
+    df1 = df[['Adj Close']]
 
     #how many days into future predicted
-    forecast_out = 30
-    df['Prediction'] = df[['Adj Close']].shift(-forecast_out)
+    df1['Prediction'] = df1[['Adj Close']].shift(-forecast_out)
 
 
-    X = np.array(df.drop(['Prediction'], axis=1))
+    X = np.array(df1.drop(['Prediction'], axis=1))
     X = X[:-forecast_out]
 
 
-    y = np.array(df["Prediction"])
+    y = np.array(df1["Prediction"])
     y = y[:-forecast_out]
 
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
+
+def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
+    
+
 
     """param_grid = {
         'C': [0.1, 1, 10, 100, 1000],
@@ -52,10 +58,13 @@ def svr_predict():
     svr_confidence = svr_rbf.score(X_test,y_test)
     #print(svr_confidence)
 
-    x_forecast = np.array(df.drop(['Prediction'], axis=1))[-forecast_out:]
+    x_forecast = np.array(df1.drop(['Prediction'], axis=1))[-forecast_out:]
 
     svr_prediction = svr_rbf.predict(x_forecast)
     print(svr_prediction)
+
+
+    plot_predict(df,svr_prediction)
 
 
 
@@ -66,4 +75,50 @@ def svr_predict():
     print(lr_confidence)
     '''
 
-svr_predict()
+def plot_predict(df_original, prediction):
+    #plot takes two np arrays
+    og_date = np.array(df_original.iloc[-30:].index)
+    og_date_array = []
+    for i in range(len(og_date)):
+        og_date_array.append(str(og_date[i]).split('T')[0])
+
+    #print(og_date_array)
+
+    num_days = len(prediction)
+    new_date = pd.date_range(start = pd.to_datetime(og_date_array[-1]) + pd.Timedelta(days=1), periods = num_days, freq='B').strftime('%Y-%m-%d').tolist()
+
+
+    all_dates = np.array(og_date_array)
+    all_dates = np.append(all_dates, new_date)
+    #print(all_dates)
+
+    all_prices = np.array(df_original.iloc[-30:]["Adj Close"])
+    all_prices = np.append(all_prices, prediction)
+    #print(all_prices)
+
+    plt.plot(og_date_array, df_original.iloc[-30:]["Adj Close"], color="green")
+    plt.plot(new_date, prediction, color="red", label="Prediction")
+
+    plt.plot([og_date_array[-1], new_date[0]], 
+             [df_original.iloc[-1]["Adj Close"], prediction[0]], 
+             color="red")
+    
+
+    #plt.gca().xaxis.set_major_locator(mdates.WeekdayLocator(interval=1))
+    
+    dates_plot = []
+    for i in range(0,len(og_date_array), 7):
+        dates_plot.append(og_date_array[i])
+    for i in range(0, len(new_date), 7):
+        dates_plot.append(new_date[i])
+    #print(dates_plot)
+    plt.xticks(dates_plot)
+    plt.xticks(rotation=270)
+
+
+    plt.show()
+    return
+
+data_pre("GOOGL", 1)
+
+
