@@ -9,7 +9,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 
-def data_pre(stock_name, forecast_out):
+def data_pre(stock_name, forecast_out, model_num):
+
+    #1: linear regression #2: SVR
+
     df = yfinance.download(stock_name)
     #print(df)
 
@@ -28,7 +31,11 @@ def data_pre(stock_name, forecast_out):
 
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-    svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
+
+    if model_num == 1:
+        linear_regression(X_train, X_test, y_train, y_test, df, df1, forecast_out)
+    elif model_num == 2:
+        svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
 
 def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
     
@@ -55,7 +62,7 @@ def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
 
     svr_rbf = SVR(kernel='rbf', C=1000, gamma= 0.1, epsilon=0.1)
     svr_rbf.fit(X_train,y_train)
-    svr_confidence = svr_rbf.score(X_test,y_test)
+    #svr_confidence = svr_rbf.score(X_test,y_test)
     #print(svr_confidence)
 
     x_forecast = np.array(df1.drop(['Prediction'], axis=1))[-forecast_out:]
@@ -66,14 +73,17 @@ def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
 
     plot_predict(df,svr_prediction)
 
-
-
-    '''
+def linear_regression(X_train, X_test, y_train, y_test, df, df1, forecast_out):
     lr = LinearRegression()
     lr.fit(X_train, y_train)
-    lr_confidence = lr.score(X_test,y_test)
-    print(lr_confidence)
-    '''
+    #lr_confidence = lr.score(X_test,y_test)
+    x_forecast = np.array(df1.drop(['Prediction'], axis=1))[-forecast_out:]
+
+    lr_prediction = lr.predict(x_forecast)
+    print(lr_prediction)
+    plot_predict(df,lr_prediction)
+
+
 
 def plot_predict(df_original, prediction):
     #plot takes two np arrays
@@ -119,6 +129,6 @@ def plot_predict(df_original, prediction):
     plt.show()
     return
 
-data_pre("GOOGL", 1)
+data_pre("NIO", 1,1 )
 
 
