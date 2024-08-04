@@ -41,11 +41,12 @@ def data_pre(stock_name, forecast_out, model_num):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
     if model_num == 1:
-        linear_regression_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
+        prediction= linear_regression_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
     elif model_num == 2:
-        svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
+        prediction= svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out)
     elif model_num ==3:
-        lstm_predict(df,forecast_out)
+        prediction= lstm_predict(df,forecast_out)
+    return plot_predict(df, prediction)
 
 def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
     
@@ -81,7 +82,7 @@ def svr_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
     print(svr_prediction)
 
 
-    plot_predict(df,svr_prediction)
+    return svr_prediction
 
 def linear_regression_predict(X_train, X_test, y_train, y_test, df, df1, forecast_out):
     lr = LinearRegression()
@@ -91,7 +92,7 @@ def linear_regression_predict(X_train, X_test, y_train, y_test, df, df1, forecas
 
     lr_prediction = lr.predict(x_forecast)
     print(lr_prediction)
-    plot_predict(df,lr_prediction)
+    return lr_prediction
 
 def lstm_predict(df, forecast_out):
     #use window size 3
@@ -179,7 +180,8 @@ def lstm_predict(df, forecast_out):
         
 
     print(predictions)
-    plot_predict(df, predictions)
+    return predictions
+    return 
 
     '''X_train = np.concatenate([np.array(x) for x in X_train])
     y_train = np.concatenate([np.array(y) for y in y_train])
@@ -228,7 +230,7 @@ def lstm_predict(df, forecast_out):
 
     
 
-    return
+ 
 
 
 def plot_predict(df_original, prediction):
@@ -251,7 +253,7 @@ def plot_predict(df_original, prediction):
     all_prices = np.array(df_original.iloc[-30:]["Adj Close"])
     all_prices = np.append(all_prices, prediction)
     #print(all_prices)'''
-
+    fig = plt.figure()
     plt.plot(og_date_array, df_original.iloc[-30:]["Adj Close"], color="green")
     plt.plot(new_date, prediction, color="red", label="Prediction")
 
@@ -272,9 +274,7 @@ def plot_predict(df_original, prediction):
     plt.xticks(rotation=270)
 
 
-    plt.show()
-    return
+    return fig
 
-data_pre("MSFT", 10,3 )
 
 
